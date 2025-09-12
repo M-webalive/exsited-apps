@@ -52,13 +52,21 @@ spec:
                 -Xms512m
                 -Xmx768m
           readinessProbe:
-            tcpSocket: { port: {{ .Values.service.port }} }
-            initialDelaySeconds: 15
-            periodSeconds: 5
-          livenessProbe:
-            tcpSocket: { port: {{ .Values.service.port }} }
-            initialDelaySeconds: 45
+            httpGet:
+              path: /
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 60
             periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
+          livenessProbe:
+            httpGet:
+              path: /
+              port: {{ .Values.service.port }}
+            initialDelaySeconds: 120
+            periodSeconds: 20
+            timeoutSeconds: 5
+            failureThreshold: 6
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       nodeSelector:
@@ -67,3 +75,4 @@ spec:
         {{- toYaml .Values.tolerations | nindent 8 }}
       affinity:
         {{- toYaml .Values.affinity | nindent 8 }}
+

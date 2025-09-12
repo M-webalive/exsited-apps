@@ -47,6 +47,10 @@ spec:
                 -DdataSource.password=$(DB_PASS)
                 -DdataSource.driverClassName=org.mariadb.jdbc.Driver
                 -Dproduct=EXSITED
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75
+                -Xms512m
+                -Xmx768m
           readinessProbe:
             tcpSocket: { port: {{ .Values.service.port }} }
             initialDelaySeconds: 15
@@ -63,5 +67,3 @@ spec:
         {{- toYaml .Values.tolerations | nindent 8 }}
       affinity:
         {{- toYaml .Values.affinity | nindent 8 }}
-
-

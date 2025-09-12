@@ -55,18 +55,16 @@ spec:
             httpGet:
               path: /
               port: {{ .Values.service.port }}
-            initialDelaySeconds: 60
+            initialDelaySeconds: 120   # give Grails 2 minutes to warm up
             periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 6
+            failureThreshold: 10
           livenessProbe:
             httpGet:
               path: /
               port: {{ .Values.service.port }}
-            initialDelaySeconds: 120
+            initialDelaySeconds: 180   # give Grails 3 minutes for first check
             periodSeconds: 20
-            timeoutSeconds: 5
-            failureThreshold: 6
+            failureThreshold: 5
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
       nodeSelector:
@@ -75,4 +73,5 @@ spec:
         {{- toYaml .Values.tolerations | nindent 8 }}
       affinity:
         {{- toYaml .Values.affinity | nindent 8 }}
+
 

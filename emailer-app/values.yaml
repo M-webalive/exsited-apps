@@ -28,7 +28,14 @@ mariadb:
     size: 5Gi
     className: ""          # use cluster default if empty
 
-resources: {}
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "250m"
+  limits:
+    memory: "1024Mi"
+    cpu: "500m"
+
 nodeSelector: {}
 tolerations: []
 affinity: {}

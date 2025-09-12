@@ -1,3 +1,4 @@
+
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -27,11 +28,12 @@ spec:
           ports:
             - containerPort: {{ .Values.service.port }}
               name: http
-          # We override the command so we can pass secret values safely to Java
+          # Pass Grails/DB config to the app
           command: ["sh","-lc"]
           args:
             - >
               java
+              $JAVA_TOOL_OPTIONS
               -Dgrails.env=${GRAILS_ENV}
               -Dserver.port=${SERVER_PORT}
               -DdataSource.url=jdbc:mysql://${DB_HOST}:3306/${DB_NAME}
@@ -55,6 +57,12 @@ spec:
                 secretKeyRef:
                   name: {{ include "ps-app.mariadb.fullname" . }}-secret
                   key: mariadb-password
+            - name: JAVA_TOOL_OPTIONS
+              value: >-
+                -XX:+UseContainerSupport
+                -XX:MaxRAMPercentage=75
+                -Xms512m
+                -Xmx768m
           {{- if .Values.app.appConfig }}
           volumeMounts:
             - name: app-config

@@ -10,7 +10,7 @@ replicaCount: 1
 service:
   type: NodePort
   port: 5000
-  nodePort: 30086
+  nodePort: 30099
 
 env:
   - name: MONGO_URI
@@ -46,7 +46,7 @@ mongo:
   # external access
   externalAccess:
     enabled: true
-    nodePort: 30088
+    nodePort: 30079
   
 
   image:

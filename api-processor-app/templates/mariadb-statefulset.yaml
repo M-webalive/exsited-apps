@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-mariadb
+spec:
+  serviceName: {{ .Release.Name }}-mariadb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-mariadb
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: {{ .Values.mariadb.image }}
+          ports:
+            - containerPort: 3306
+          env:
+            {{- if .Values.mariadb.rootAllowEmptyPassword }}
+            - name: MARIADB_ALLOW_EMPTY_ROOT_PASSWORD
+              value: "yes"
+            {{- else }}
+            - name: MYSQL_ROOT_PASSWORD
+              value: {{ .Values.mariadb.rootPassword | quote }}
+            {{- end }}
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mariadb.database }}
+          volumeMounts:
+            - name: mariadb-data
+              mountPath: /var/lib/mysql
+          resources:
+            {{- toYaml .Values.mariadb.resources | nindent 12 }}
+  {{- if .Values.mariadb.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: mariadb-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.mariadb.persistence.size }}
+        {{- if .Values.mariadb.persistence.storageClass }}
+        storageClassName: {{ .Values.mariadb.persistence.storageClass }}
+        {{- end }}
+  {{- else }}
+  template:
+    spec:
+      volumes:
+        - name: mariadb-data
+          emptyDir: {}
+  {{- end }}

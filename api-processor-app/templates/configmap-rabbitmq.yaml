@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "api-processor.fullname" . }}-rabbit-config
+data:
+  rabbit_config.properties: |
+    # NOTE:
+    # 1. Create User
+    # 2. Create virtual host (Created user must have access to the virtual host)
+    # 3. DO NOT / NO NEED to create/change Queue & Exchange
+    DEFAULT_WAITING_TIME_IN_SECOND={{ .Values.rabbitConfig.DEFAULT_WAITING_TIME_IN_SECOND }}
+    DEFAULT_CONDITION_PULL_INTERVAL_IN_MILLISECONDS={{ .Values.rabbitConfig.DEFAULT_CONDITION_PULL_INTERVAL_IN_MILLISECONDS }}
+    # Use k8s service instead of 127.0.0.1
+    RABBIT_CONNECTION_HOST={{ .Release.Name }}-rabbitmq
+    API_HANDLER_CONNECTION_USERNAME={{ .Values.rabbitConfig.API_HANDLER_CONNECTION_USERNAME }}
+    RABBIT_CONNECTION_PASSWORD={{ .Values.rabbitConfig.RABBIT_CONNECTION_PASSWORD }}
+    API_HANDLER_CONNECTION_VIRTUAL_HOST={{ .Values.rabbitConfig.API_HANDLER_CONNECTION_VIRTUAL_HOST }}
+    # DO NOT CHANGE
+    API_HANDLER_CONNECTION_CONNECTION_NAME={{ .Values.rabbitConfig.API_HANDLER_CONNECTION_CONNECTION_NAME }}
+    API_HANDLER_OUTGOING_REQUEST={{ .Values.rabbitConfig.API_HANDLER_OUTGOING_REQUEST }}
+    API_HANDLER_OUTGOING_RABBIT_EXCHANGE={{ .Values.rabbitConfig.API_HANDLER_OUTGOING_RABBIT_EXCHANGE }}
+    # Node Config
+    REQUEST_NODE_ALL={{ .Values.rabbitConfig.REQUEST_NODE_ALL }}
+    REQUEST_NODE_ALL_HOST={{ .Values.rabbitConfig.REQUEST_NODE_ALL_HOST }}
+    REQUEST_NODE_ALL_RPC={{ .Values.rabbitConfig.REQUEST_NODE_ALL_RPC }}
+    REQUEST_NODE_CURRENT={{ .Values.rabbitConfig.REQUEST_NODE_CURRENT }}
+    RESPONSE_NODE_ALL={{ .Values.rabbitConfig.RESPONSE_NODE_ALL }}
+    RESPONSE_NODE_ALL_HOST={{ .Values.rabbitConfig.RESPONSE_NODE_ALL_HOST }}
+    RESPONSE_NODE_ALL_RPC={{ .Values.rabbitConfig.RESPONSE_NODE_ALL_RPC }}
+    RESPONSE_NODE_CURRENT={{ .Values.rabbitConfig.RESPONSE_NODE_CURRENT }}
+    TEST_DATA_MODE={{ .Values.rabbitConfig.TEST_DATA_MODE }}
+    PRIMARY_NODE={{ .Values.rabbitConfig.PRIMARY_NODE }}

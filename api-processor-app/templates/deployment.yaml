@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "api-processor.fullname" . }}
+  labels:
+    app: api-processor
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: api-processor
+  template:
+    metadata:
+      labels:
+        app: api-processor
+    spec:
+      {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.image.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: api-processor
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: TZ
+              value: {{ .Values.app.timezone | quote }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+
+          # Mirror compose: java + -D flags + -jar /app/app.jar
+          command: ["java"]
+          args:
+            - "-Dserver.port={{ .Values.service.port }}"
+            - "-Dgrails.env={{ .Values.app.grailsEnv }}"
+            - "-DdataSource.url=jdbc:mariadb://{{ .Release.Name }}-mariadb:3306/{{ .Values.mariadb.database }}"
+            - "-DdataSource.username=root"
+            - "-DdataSource.password="
+            - "-DdataSource.driverClassName=org.mariadb.jdbc.Driver"
+            - "-DWEBHOOK_CONNECTION_HOST={{ .Release.Name }}-rabbitmq"
+            - "-DWEBHOOK_CONNECTION_USERNAME={{ .Values.rabbitmq.user }}"
+            - "-DWEBHOOK_CONNECTION_PASSWORD={{ .Values.rabbitmq.password }}"
+            - "-DWEBHOOK_CONNECTION_VIRTUAL_HOST={{ .Values.rabbitmq.vhost }}"
+            - "-jar"
+            - "/app/app.jar"
+
+          volumeMounts:
+            - name: rabbit-config
+              mountPath: /app/src/main/webapp/WEB-INF/rabbit_config.properties
+              subPath: rabbit_config.properties
+              readOnly: true
+
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}
+
+      volumes:
+        - name: rabbit-config
+          configMap:
+            name: {{ include "api-processor.fullname" . }}-rabbit-config
+            items:
+              - key: rabbit_config.properties
+                path: rabbit_config.properties

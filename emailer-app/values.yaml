@@ -1,0 +1,34 @@
+image:
+  repository: exsited/exsited-app-emailer
+  tag: "250903001"
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: exsited-dockerhub
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30080
+
+ingress:
+  enabled: false
+
+app:
+  grailsEnv: development
+  # Probes use TCP so we don't care about exact HTTP path
+
+mariadb:
+  enabled: true
+  image: "mariadb:10.6"
+  rootPassword: "rootpass"
+  database: "exsited_app_emailer"
+  user: "emailer_user"
+  password: "emailer_pass"
+  storage:
+    size: 5Gi
+    className: ""          # use cluster default if empty
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

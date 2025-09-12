@@ -1,0 +1,53 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "email-service.fullname" . }}-rabbitmq
+  labels:
+    app: email-service
+spec:
+  serviceName: {{ include "email-service.fullname" . }}-rabbitmq
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "email-service.fullname" . }}-rabbitmq
+  template:
+    metadata:
+      labels:
+        app: {{ include "email-service.fullname" . }}-rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: {{ .Values.rabbitmq.image }}
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "email-service.fullname" . }}-rabbitmq-secret
+                  key: rabbitmq-username
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "email-service.fullname" . }}-rabbitmq-secret
+                  key: rabbitmq-password
+            - name: RABBITMQ_DEFAULT_VHOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "email-service.fullname" . }}-rabbitmq-secret
+                  key: rabbitmq-vhost
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+          volumeMounts:
+            - name: rabbitmq-storage
+              mountPath: /var/lib/rabbitmq
+          resources:
+            {{- toYaml .Values.rabbitmq.resources | nindent 12 }}
+  volumeClaimTemplates:
+    - metadata:
+        name: rabbitmq-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.rabbitmq.persistence.size }}
+        storageClassName: {{ .Values.rabbitmq.persistence.storageClass | quote }}

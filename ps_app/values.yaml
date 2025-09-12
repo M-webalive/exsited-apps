@@ -1,0 +1,44 @@
+image:
+  repository: docker.io/munaaamohameddd/exsited_ps_app
+  tag: "25.09.03-app1"
+  pullPolicy: IfNotPresent
+  # imagePullSecrets: []   # e.g., ["my-dockerhub-secret"] if private later
+
+service:
+  type: NodePort
+  port: 8081
+  nodePort: 30081
+
+ingress:
+  enabled: false
+  className: ""
+  hosts:
+    - host: ps.example.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+app:
+  grailsEnv: development
+  readinessPath: /user/index
+  livenessPath: /user/index
+  appConfig: |-
+    # Possible APPLICATION_PROVIDER = EXSITED, WEB_COMMANDER
+    APPLICATION_PROVIDER=EXSITED
+
+mariadb:
+  enabled: true
+  image: "mariadb:10.6"
+  rootPassword: "rootpass"
+  database: "exsited_app_ps"
+  user: "ps_user"
+  password: "ps_pass"
+  storage:
+    size: 5Gi
+    className: ""
+
+resources: {}
+nodeSelector: {}
+tolerations: []
+affinity: {}

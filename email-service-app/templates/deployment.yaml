@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "email-service.fullname" . }}
+  labels:
+    app: email-service
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: email-service
+  template:
+    metadata:
+      labels:
+        app: email-service
+    spec:
+      {{- if .Values.image.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.image.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      {{- end }}
+      containers:
+        - name: email-service
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          env:
+            - name: TZ
+              value: {{ .Values.app.timezone }}
+            - name: SERVER_PORT
+              value: "{{ .Values.service.port }}"
+
+            # Database
+            - name: SPRING_DATASOURCE_URL
+              value: "jdbc:mysql://{{ include "email-service.fullname" . }}-mariadb:3306/{{ .Values.mariadb.database }}?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC"
+            - name: SPRING_DATASOURCE_USERNAME
+              value: root
+            - name: SPRING_DATASOURCE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "email-service.fullname" . }}-mariadb-secret
+                  key: mariadb-root-password
+            - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+              value: com.mysql.cj.jdbc.Driver
+
+            # RabbitMQ
+            - name: SPRING_RABBITMQ_HOST
+              value: {{ include "email-service.fullname" . }}-rabbitmq
+            - name: SPRING_RABBITMQ_PORT
+              value: "5672"
+            - name: SPRING_RABBITMQ_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "email-service.fullname" . }}-rabbitmq-secret
+                  key: rabbitmq-username
+            - name: SPRING_RABBITMQ_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "email-service.fullname" . }}-rabbitmq-secret
+                  key: rabbitmq-password
+            - name: SPRING_RABBITMQ_VIRTUAL_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "email-service.fullname" . }}-rabbitmq-secret
+                  key: rabbitmq-vhost
+
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          resources:
+            {{- toYaml .Values.app.resources | nindent 12 }}

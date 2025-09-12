@@ -1,0 +1,87 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "webhook-app.fullname" . }}
+  labels:
+    app.kubernetes.io/name: {{ include "webhook-app.name" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ include "webhook-app.name" . }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ include "webhook-app.name" . }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      imagePullSecrets:
+        {{- range .Values.image.imagePullSecrets }}
+        - name: {{ .name }}
+        {{- end }}
+      dnsPolicy: ClusterFirst
+      dnsConfig:
+        searches:
+          - webhook-app.svc.cluster.local
+          - svc.cluster.local
+          - cluster.local
+      containers:
+        - name: webhook
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: 8080
+          args:
+            - "-Dserver.port=8080"
+            - "-Dgrails.env=development"
+            - "-DdataSource.url=jdbc:mariadb://webhook-mariadb:3306/exsited_app_webhook_service"
+            - "-DdataSource.username=webhook"
+            - "-DdataSource.password=$(DB_PASSWORD)"
+            - "-DdataSource.driverClassName=org.mariadb.jdbc.Driver"
+            - "-DWEBHOOK_CONNECTION_HOST={{ .Values.rabbitmq.host }}"
+            - "-DWEBHOOK_CONNECTION_USERNAME={{ .Values.rabbitmq.username }}"
+            - "-DWEBHOOK_CONNECTION_PASSWORD=$(RABBIT_PASSWORD)"
+            - "-DWEBHOOK_CONNECTION_VIRTUAL_HOST={{ .Values.rabbitmq.vhost }}"
+            - "-Drabbit.config.file=/app/rabbit_config.properties"
+            - "-jar"
+            - "/app/app.jar"
+          env:
+            - name: TZ
+              value: {{ .Values.timezone | quote }}
+            - name: RABBIT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "webhook-app.fullname" . }}-rabbit
+                  key: password
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: webhook-mariadb-secret
+                  key: mariadb-password
+          volumeMounts:
+            - name: rabbit-props
+              mountPath: /app/src/main/webapp/WEB-INF/rabbit_config.properties
+              subPath: rabbit_config.properties
+              readOnly: true
+            - name: rabbit-props
+              mountPath: /app/rabbit_config.properties
+              subPath: rabbit_config.properties
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8080
+            initialDelaySeconds: 30
+            periodSeconds: 20
+      volumes:
+        - name: rabbit-props
+          configMap:
+            name: {{ include "webhook-app.fullname" . }}-rabbit-props

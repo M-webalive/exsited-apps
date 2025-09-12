@@ -1,0 +1,38 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "webhook-app.fullname" . }}-rabbit-props
+data:
+  rabbit_config.properties: |
+    NOTE:
+    # 1. Create User
+    # 2. Create virtual host (Created user must have access to the virtual host)
+    # 3. DO NOT / NO NEED to create/change Queue & Exchange
+    DEFAULT_WAITING_TIME_IN_SECOND={{ .Values.rabbitProperties.DEFAULT_WAITING_TIME_IN_SECOND }}
+    DEFAULT_CONDITION_PULL_INTERVAL_IN_MILLISECONDS={{ .Values.rabbitProperties.DEFAULT_CONDITION_PULL_INTERVAL_IN_MILLISECONDS }}
+    WEBHOOK_CONNECTION_HOST={{ .Values.rabbitmq.host }}
+    WEBHOOK_CONNECTION_USERNAME={{ .Values.rabbitmq.username }}
+    WEBHOOK_CONNECTION_PASSWORD={{ .Values.rabbitmq.password }}
+    WEBHOOK_CONNECTION_VIRTUAL_HOST={{ .Values.rabbitmq.vhost }}
+    # DO NOT CHANGE
+    WEBHOOK_CONNECTION_CONNECTION_NAME=WEBHOOK_EXTERNAL_APP
+    WEBHOOK_QUEUE_WEBHOOK_INCOMING_REQUEST=WEBHOOK_INCOMING_REQUEST_
+    WEBHOOK_QUEUE_WEBHOOK_INCOMING_RESPONSE=WEBHOOK_INCOMING_RESPONSE
+    WEBHOOK_INCOMING_RABBIT_EXCHANGE=WEBHOOK_INCOMING_RABBIT_EXCHANGE
+
+    #Special Configurations
+    AROFLO_WAITING_TIME_IN_SECOND={{ .Values.rabbitProperties.AROFLO_WAITING_TIME_IN_SECOND }}
+
+    #Node Config
+    REQUEST_NODE_ALL={{ .Values.rabbitProperties.REQUEST_NODE_ALL }}
+    REQUEST_NODE_ALL_HOST={{ .Values.rabbitProperties.REQUEST_NODE_ALL_HOST }}
+    REQUEST_NODE_ALL_RPC={{ .Values.rabbitProperties.REQUEST_NODE_ALL_RPC }}
+    REQUEST_NODE_CURRENT={{ .Values.rabbitProperties.REQUEST_NODE_CURRENT }}
+
+    RESPONSE_NODE_ALL={{ .Values.rabbitProperties.RESPONSE_NODE_ALL }}
+    RESPONSE_NODE_ALL_HOST={{ .Values.rabbitProperties.RESPONSE_NODE_ALL_HOST }}
+    RESPONSE_NODE_ALL_RPC={{ .Values.rabbitProperties.RESPONSE_NODE_ALL_RPC }}
+    RESPONSE_NODE_CURRENT={{ .Values.rabbitProperties.RESPONSE_NODE_CURRENT }}
+
+    WEBHOOK_TEST_DATA_MODE={{ .Values.rabbitProperties.WEBHOOK_TEST_DATA_MODE }}
+    PRIMARY_NODE={{ .Values.rabbitProperties.PRIMARY_NODE }}

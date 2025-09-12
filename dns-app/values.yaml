@@ -1,0 +1,87 @@
+image:
+  repository: docker.io/exsited/dns_app_servers
+  tag: "250904001"
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: exsited-dockerhub
+
+replicaCount: 1
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30074   # pick a free NodePort
+
+# App startup flags
+args:
+  - "-Dserver.port=8080"
+  - "-Dgrails.env=development"
+  - "-DdataSource.url=jdbc:mariadb://mariadb:3306/exsited_app_dap"
+  - "-DdataSource.username=dns_user"
+  - "-DdataSource.password=dns_passwd"
+  - "-DdataSource.driverClassName=org.mariadb.jdbc.Driver"
+  - "-jar"
+  - "/app/app.jar"
+
+env:
+  - name: TZ
+    value: Australia/Melbourne
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: ["ALL"]
+
+probes:
+  enabled: true
+  path: /actuator/health
+  port: 8080
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 10
+
+mariadb:
+  name: mariadb
+  enabled: true
+  port: 3306
+  database: exsited_app_dap
+
+  rootUser: root
+  rootPassword: "root_passwd"
+  user: dns_user
+  password: dns_passwd
+
+  image:
+    repository: docker.io/library/mariadb
+    tag: "10.6"
+    pullPolicy: IfNotPresent
+
+  persistence:
+    enabled: true
+    accessModes: ["ReadWriteOnce"]
+    size: 5Gi
+    storageClassName: ""
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi

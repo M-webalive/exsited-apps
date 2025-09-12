@@ -1,0 +1,56 @@
+{{- if .Values.mariadb.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.mariadb.name }}
+  labels:
+    {{- include "sap.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Values.mariadb.name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.mariadb.name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.mariadb.name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: mariadb
+          image: "{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}"
+          imagePullPolicy: {{ .Values.mariadb.image.pullPolicy }}
+          ports:
+            - name: mysql
+              containerPort: {{ .Values.mariadb.port }}
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              value: "{{ .Values.mariadb.rootPassword }}"
+            - name: MARIADB_DATABASE
+              value: "{{ .Values.mariadb.database }}"
+            - name: MARIADB_USER
+              value: "{{ .Values.mariadb.user }}"
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.mariadb.name }}-user
+                  key: MARIADB_PASSWORD
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+          resources:
+            {{- toYaml .Values.mariadb.resources | nindent 12 }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: {{ toYaml .Values.mariadb.persistence.accessModes | nindent 8 }}
+        resources:
+          requests:
+            storage: {{ .Values.mariadb.persistence.size }}
+        {{- if .Values.mariadb.persistence.storageClassName }}
+        storageClassName: "{{ .Values.mariadb.persistence.storageClassName }}"
+        {{- end }}
+{{- end }}

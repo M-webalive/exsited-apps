@@ -1,0 +1,63 @@
+replicaCount: 1
+
+image:
+  repository: exsited/exsited-app-pdf-service
+  tag: "250905002"   
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: exsited-dockerhub
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30088   # unique NodePort for PDF Service
+
+app:
+  timezone: Australia/Melbourne
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+mariadb:
+  image: mariadb:10.6
+  database: exsited_app_pdf_service
+  rootAllowEmptyPassword: true
+  rootPassword: ""   # ignored if allowEmptyPassword=true
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: standard
+
+rabbitmq:
+  image: rabbitmq:3-management
+  user: pdf_processor
+  password: akabaka
+  vhost: pdf_processor
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: standard
+
+rabbitmqService:
+  exposeManagementAsNodePort: true
+  managementNodePort: 31674   # RabbitMQ UI for PDF service
+  exposeAmqpAsNodePort: false
+  amqpNodePort: 30674

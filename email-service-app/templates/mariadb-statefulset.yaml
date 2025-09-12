@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "email-service.fullname" . }}-mariadb
+  labels:
+    app: email-service
+spec:
+  serviceName: {{ include "email-service.fullname" . }}-mariadb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "email-service.fullname" . }}-mariadb
+  template:
+    metadata:
+      labels:
+        app: {{ include "email-service.fullname" . }}-mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: {{ .Values.mariadb.image }}
+          env:
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mariadb.database }}
+            - name: MYSQL_ALLOW_EMPTY_PASSWORD
+              value: "{{ .Values.mariadb.rootAllowEmptyPassword }}"
+          ports:
+            - containerPort: 3306
+          volumeMounts:
+            - name: mariadb-storage
+              mountPath: /var/lib/mysql
+          resources:
+            {{- toYaml .Values.mariadb.resources | nindent 12 }}
+  volumeClaimTemplates:
+    - metadata:
+        name: mariadb-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.mariadb.persistence.size }}
+        storageClassName: {{ .Values.mariadb.persistence.storageClass | quote }}

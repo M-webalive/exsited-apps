@@ -1,0 +1,11 @@
+{{- if .Values.app.appConfig }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "ps-app.fullname" . }}-config
+  labels:
+    {{- include "ps-app.labels" . | nindent 4 }}
+data:
+  app_config.properties: |
+{{- .Values.app.appConfig | nindent 4 }}
+{{- end }}

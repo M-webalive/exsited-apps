@@ -1,0 +1,59 @@
+image:
+  repository: docker.io/exsited/exsited-app-webhook
+  tag: "250904001"
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: exsited-dockerhub
+
+replicaCount: 1
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30083   # change if taken
+
+resources: {}
+#  requests:
+#    cpu: 100m
+#    memory: 256Mi
+#  limits:
+#    cpu: 500m
+#    memory: 512Mi
+
+timezone: "Australia/Melbourne"
+
+# ---- RabbitMQ connection 
+rabbitmq:
+  host: webhook-app-webhook-rabbitmq  
+  username: webhook
+  password: "akabaka"
+  vhost: webhook
+
+# ---- DB 
+datasource:
+  enabled: true
+  url: "jdbc:mariadb://mariadb:3306/exsited_app_webhook_service"
+  username: "root"
+  password: ""                    # empty like compose
+  driverClassName: "org.mariadb.jdbc.Driver"
+
+# ---- rabbit_config.properties content ----
+rabbitProperties:
+  DEFAULT_WAITING_TIME_IN_SECOND: "600"
+  DEFAULT_CONDITION_PULL_INTERVAL_IN_MILLISECONDS: "100"
+  WEBHOOK_TEST_DATA_MODE: "true"
+  PRIMARY_NODE: "_REQ_NODE_1"
+
+  # Special configs
+  AROFLO_WAITING_TIME_IN_SECOND: "3"
+
+  # Node maps (use your real IPs/ports)
+  REQUEST_NODE_ALL: "_REQ_NODE_1,_REQ_NODE_2"
+  REQUEST_NODE_ALL_HOST: "http://10.0.2.81:8087,http://10.0.2.81:8887"
+  REQUEST_NODE_ALL_RPC:  "http://10.0.2.81:8871,http://10.0.2.81:8872"
+  REQUEST_NODE_CURRENT:  "_REQ_NODE_1"
+
+  RESPONSE_NODE_ALL: "_RES_NODE_1,_RES_NODE_2"
+  RESPONSE_NODE_ALL_HOST: "http://10.0.2.81:8861,http://10.0.2.81:8862"
+  RESPONSE_NODE_ALL_RPC:  "http://10.0.2.81:8873,http://10.0.2.81:8874"
+  RESPONSE_NODE_CURRENT:  ""

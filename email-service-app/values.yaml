@@ -1,0 +1,63 @@
+replicaCount: 1
+
+image:
+  repository: exsited/exsited-app-email-service
+  tag: "250904001"
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: exsited-dockerhub
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30087   # unique NodePort for Email Service
+
+app:
+  timezone: Australia/Melbourne
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+mariadb:
+  image: mariadb:10.6
+  database: exsited_app_email_service
+  rootAllowEmptyPassword: true
+  rootPassword: ""   # ignored if allowEmptyPassword=true
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: standard
+
+rabbitmq:
+  image: rabbitmq:3-management
+  user: email_user
+  password: email_pass
+  vhost: email_vhost
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: standard
+
+rabbitmqService:
+  exposeManagementAsNodePort: true
+  managementNodePort: 31673
+  exposeAmqpAsNodePort: false
+  amqpNodePort: 30673

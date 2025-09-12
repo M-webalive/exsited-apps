@@ -1,0 +1,46 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.mariadb.name }}
+spec:
+  serviceName: {{ .Values.mariadb.name }}
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Values.mariadb.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.mariadb.name }}
+    spec:
+      containers:
+        - name: mariadb
+          image: "{{ .Values.mariadb.image.repository }}:{{ .Values.mariadb.image.tag }}"
+          imagePullPolicy: {{ .Values.mariadb.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.mariadb.port }}
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: {{ .Values.mariadb.rootPassword | quote }}
+            - name: MYSQL_DATABASE
+              value: {{ .Values.mariadb.database | quote }}
+            - name: MYSQL_USER
+              value: {{ .Values.mariadb.user | quote }}
+            - name: MYSQL_PASSWORD
+              value: {{ .Values.mariadb.password | quote }}
+          resources:
+            {{- toYaml .Values.mariadb.resources | nindent 12 }}
+          volumeMounts:
+            - name: mariadb-data
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: mariadb-data
+      spec:
+        accessModes: {{ toYaml .Values.mariadb.persistence.accessModes | nindent 10 }}
+        resources:
+          requests:
+            storage: {{ .Values.mariadb.persistence.size }}
+        {{- if .Values.mariadb.persistence.storageClassName }}
+        storageClassName: {{ .Values.mariadb.persistence.storageClassName }}
+        {{- end }}

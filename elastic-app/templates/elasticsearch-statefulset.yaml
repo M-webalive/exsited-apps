@@ -1,0 +1,61 @@
+{{- if .Values.elasticsearch.enabled }}
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Values.elasticsearch.name }}
+  labels:
+    {{- include "es-app.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ .Values.elasticsearch.name }}
+  replicas: {{ .Values.elasticsearch.replicas }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: {{ .Values.elasticsearch.name }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: {{ .Values.elasticsearch.name }}
+        app.kubernetes.io/instance: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: elasticsearch
+          image: "{{ .Values.elasticsearch.image.repository }}:{{ .Values.elasticsearch.image.tag }}"
+          imagePullPolicy: {{ .Values.elasticsearch.image.pullPolicy }}
+          ports:
+            - name: http
+              containerPort: {{ .Values.elasticsearch.httpPort }}
+            - name: transport
+              containerPort: {{ .Values.elasticsearch.transportPort }}
+          env:
+            - name: discovery.type
+              value: "{{ .Values.elasticsearch.env.discoveryType }}"
+            - name: xpack.security.enabled
+              value: "{{ .Values.elasticsearch.env.xpackSecurityEnabled }}"
+            - name: ES_JAVA_OPTS
+              value: "{{ .Values.elasticsearch.env.esJavaOpts }}"
+          volumeMounts:
+            - name: data
+              mountPath: /usr/share/elasticsearch/data
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 12
+          resources:
+            {{- toYaml .Values.elasticsearch.resources | nindent 12 }}
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: {{ toYaml .Values.elasticsearch.persistence.accessModes | nindent 8 }}
+        resources:
+          requests:
+            storage: {{ .Values.elasticsearch.persistence.size }}
+        {{- if .Values.elasticsearch.persistence.storageClassName }}
+        storageClassName: "{{ .Values.elasticsearch.persistence.storageClassName }}"
+        {{- end }}
+{{- end }}

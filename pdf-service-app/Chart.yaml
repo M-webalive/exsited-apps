@@ -1,0 +1,6 @@
+apiVersion: v2
+name: pdf-service
+description: A Helm chart for deploying the Exsited PDF Service app with MariaDB and RabbitMQ
+type: application
+version: 0.1.0           # Helm chart version (you control this)
+appVersion: "250905002"  # App/Docker image version

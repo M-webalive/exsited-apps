@@ -1,0 +1,106 @@
+image:
+  repository: docker.io/exsited/exsited-app-elasticsearch
+  tag: "250904001"
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: exsited-dockerhub
+
+replicaCount: 1
+
+service:
+  type: NodePort
+  port: 8088
+  nodePort: 30090
+
+# Compose uses JAVA_OPTS; mirror that exactly
+env:
+  - name: JAVA_OPTS
+    value: >-
+      -Dgrails.env=development
+      -Dserver.port=8088
+      -DdataSource.url=jdbc:mysql://mariadb:3306/exsited_app_elastic_search
+      -DdataSource.username=es_user
+      -DdataSource.password=es_pass
+      -Dproduct=EXSITED
+
+# Optional PVC for /opt/versions like compose "versions:" volume
+versionsVolume:
+  enabled: true
+  size: 1Gi
+  storageClassName: ""      # default class
+  mountPath: /opt/versions
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+probes:
+  enabled: true
+  path: /actuator/health
+  port: 8088
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 10
+
+mariadb:
+  name: mariadb
+  enabled: true
+  port: 3306
+  database: exsited_app_elastic_search
+  rootPassword: "rootpass"   # matches compose (admin use)
+  user: es_user
+  password: es_pass
+  image:
+    repository: mariadb
+    tag: "10.6"
+    pullPolicy: IfNotPresent
+  extraArgs:
+    - "--character-set-server=utf8mb4"
+    - "--collation-server=utf8mb4_bin"
+  persistence:
+    enabled: true
+    accessModes: ["ReadWriteOnce"]
+    size: 5Gi
+    storageClassName: ""
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
+elasticsearch:
+  name: elasticsearch
+  enabled: true
+  replicas: 1
+  httpPort: 9200
+  transportPort: 9300
+  image:
+    repository: docker.elastic.co/elasticsearch/elasticsearch
+    tag: "8.13.4"
+    pullPolicy: IfNotPresent
+  env:
+    discoveryType: "single-node"
+    xpackSecurityEnabled: "false"
+    esJavaOpts: "-Xms512m -Xmx512m"
+  persistence:
+    enabled: true
+    accessModes: ["ReadWriteOnce"]
+    size: 10Gi
+    storageClassName: ""
+  resources:
+    requests:
+      cpu: 250m
+      memory: 1Gi
+    limits:
+      cpu: 1
+      memory: 2Gi
+  externalAccess:
+    enabled: true      # expose ES HTTP like compose
+    nodePort: 30920    # 9200 -> 30920

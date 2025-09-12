@@ -1,0 +1,88 @@
+image:
+  repository: docker.io/exsited/exsited-app-sap
+  tag: "250904001"
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: exsited-dockerhub
+
+replicaCount: 1
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30084
+
+# App startup flags
+args:
+  - "-Dserver.port=8080"
+  - "-Dgrails.env=development"
+  - "-DdataSource.url=jdbc:mariadb://mariadb:3306/exsited_app_sap"
+  - "-DdataSource.username=sap_user"
+  - "-DdataSource.password=sap_passwd"
+  - "-DdataSource.driverClassName=org.mariadb.jdbc.Driver"
+  - "-jar"
+  - "/app/app.jar"
+
+env:
+  - name: TZ
+    value: Australia/Melbourne
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 512Mi
+  limits:
+    cpu: 1
+    memory: 1Gi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: false
+  capabilities:
+    drop: ["ALL"]
+
+probes:
+  enabled: true
+  path: /actuator/health
+  port: 8080
+  initialDelaySeconds: 60
+  periodSeconds: 15
+  timeoutSeconds: 5
+  failureThreshold: 10
+
+mariadb:
+  name: mariadb
+  enabled: true
+  port: 3306
+  database: exsited_app_sap
+
+  rootUser: root
+  rootPassword: "root_passwd"   # internal admin use
+  user: sap_user
+  password: sap_passwd
+
+  image:
+    repository: docker.io/library/mariadb
+    tag: "10.6"
+    pullPolicy: IfNotPresent
+
+  persistence:
+    enabled: true
+    accessModes: ["ReadWriteOnce"]
+    size: 5Gi
+    storageClassName: ""   # use cluster default
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+

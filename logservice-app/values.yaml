@@ -1,0 +1,70 @@
+image:
+  repository: docker.io/exsited/exsited-app-fast-api-log-service
+  tag: "250904001"
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: exsited-dockerhub
+
+replicaCount: 1
+
+service:
+  type: NodePort
+  port: 5000
+  nodePort: 30086
+
+env:
+  - name: MONGO_URI
+    value: "mongodb://mongo:27017/exsited_log_service"
+  - name: MONGODB_URI
+    value: "mongodb://mongo:27017/exsited_log_service"
+  - name: DATABASE_URL
+    value: "mongodb://mongo:27017/exsited_log_service"
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+
+probes:
+  enabled: true
+  path: /
+  port: 5000
+  initialDelaySeconds: 20
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 6
+
+mongo:
+  name: mongo
+  enabled: true
+  port: 27017
+  database: exsited_log_service
+
+  # external access
+  externalAccess:
+    enabled: true
+    nodePort: 30088
+  
+
+  image:
+    repository: mongo
+    tag: "8.0"
+    pullPolicy: IfNotPresent
+
+  persistence:
+    enabled: true
+    accessModes: ["ReadWriteOnce"]
+    size: 5Gi
+    storageClassName: ""   # cluster default
+
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+

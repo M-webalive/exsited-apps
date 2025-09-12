@@ -1,0 +1,17 @@
+{{- if .Values.mariadb.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.mariadb.name }}
+  labels:
+    {{- include "sap.labels" . | nindent 4 }}
+spec:
+  clusterIP: None   # headless service for StatefulSet
+  ports:
+    - name: mysql
+      port: {{ .Values.mariadb.port }}
+      targetPort: mysql
+  selector:
+    app.kubernetes.io/name: {{ .Values.mariadb.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

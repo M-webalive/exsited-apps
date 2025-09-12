@@ -1,0 +1,20 @@
+{{- if .Values.elasticsearch.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.elasticsearch.name }}
+  labels:
+    {{- include "es-app.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    - name: http
+      port: {{ .Values.elasticsearch.httpPort }}
+      targetPort: http
+    - name: transport
+      port: {{ .Values.elasticsearch.transportPort }}
+      targetPort: transport
+  selector:
+    app.kubernetes.io/name: {{ .Values.elasticsearch.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

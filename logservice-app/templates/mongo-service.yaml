@@ -1,0 +1,17 @@
+{{- if .Values.mongo.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.mongo.name }}
+  labels:
+    {{- include "log-service.labels" . | nindent 4 }}
+spec:
+  clusterIP: None
+  ports:
+    - name: mongo
+      port: {{ .Values.mongo.port }}
+      targetPort: mongo
+  selector:
+    app.kubernetes.io/name: {{ .Values.mongo.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+{{- end }}

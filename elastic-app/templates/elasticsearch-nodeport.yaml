@@ -1,0 +1,18 @@
+{{- if and .Values.elasticsearch.enabled .Values.elasticsearch.externalAccess.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.elasticsearch.name }}-nodeport
+  labels:
+    {{- include "es-app.labels" . | nindent 4 }}
+spec:
+  type: NodePort
+  selector:
+    app.kubernetes.io/name: {{ .Values.elasticsearch.name }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+  ports:
+    - name: http
+      port: {{ .Values.elasticsearch.httpPort }}
+      targetPort: http
+      nodePort: {{ .Values.elasticsearch.externalAccess.nodePort }}
+{{- end }}

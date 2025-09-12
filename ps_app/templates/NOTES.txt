@@ -1,0 +1,19 @@
+PS app installed.
+
+Service:
+  {{- if eq .Values.service.type "NodePort" -}}
+  NodePort:  http://<NODE-IP>:{{ .Values.service.nodePort }}/user/index
+  {{- else -}}
+  ClusterIP: run `kubectl port-forward svc/{{ include "ps-app.fullname" . }} 8081:{{ .Values.service.port }}`
+             then open http://localhost:8081/user/index
+  {{- end }}
+
+MariaDB:
+  Service:   {{ include "ps-app.mariadb.fullname" . }}:3306
+  Database:  {{ .Values.mariadb.database }}
+  User:      {{ .Values.mariadb.user }}
+
+To test locally (no Ingress), if NodePort:
+  curl -I http://<NODE-IP>:{{ .Values.service.nodePort }}/user/index
+
+

@@ -1,0 +1,6 @@
+apiVersion: v2
+name: api-processor
+description: exsited-app-api-processor with MariaDB and RabbitMQ
+type: application
+version: 0.1.0
+appVersion: "250904001"

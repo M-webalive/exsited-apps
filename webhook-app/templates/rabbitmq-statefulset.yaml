@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "webhook-app.fullname" . }}-rabbitmq
+spec:
+  serviceName: {{ include "webhook-app.fullname" . }}-rabbitmq
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ include "webhook-app.fullname" . }}-rabbitmq
+  template:
+    metadata:
+      labels:
+        app: {{ include "webhook-app.fullname" . }}-rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: rabbitmq:3-management
+          ports:
+            - containerPort: 5672   # AMQP
+            - containerPort: 15672  # Management UI
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: {{ .Values.rabbitmq.username }}
+            - name: RABBITMQ_DEFAULT_PASS
+              valueFrom:
+                secretKeyRef:
+                  name: {{ include "webhook-app.fullname" . }}-rabbit
+                  key: password
+            - name: RABBITMQ_DEFAULT_VHOST
+              value: {{ .Values.rabbitmq.vhost }}
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq
+  volumeClaimTemplates:
+    - metadata:
+        name: rabbitmq-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi

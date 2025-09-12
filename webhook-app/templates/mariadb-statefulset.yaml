@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: webhook-mariadb
+spec:
+  serviceName: webhook-mariadb
+  replicas: 1
+  selector:
+    matchLabels:
+      app: webhook-mariadb
+  template:
+    metadata:
+      labels:
+        app: webhook-mariadb
+    spec:
+      containers:
+        - name: mariadb
+          image: mariadb:10.6
+          ports:
+            - containerPort: 3306
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: webhook-mariadb-secret
+                  key: mariadb-root-password
+            - name: MARIADB_USER
+              valueFrom:
+                secretKeyRef:
+                  name: webhook-mariadb-secret
+                  key: mariadb-username
+            - name: MARIADB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: webhook-mariadb-secret
+                  key: mariadb-password
+            - name: MARIADB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: webhook-mariadb-secret
+                  key: mariadb-database
+          volumeMounts:
+            - name: mariadb-data
+              mountPath: /var/lib/mysql
+  volumeClaimTemplates:
+    - metadata:
+        name: mariadb-data
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 1Gi

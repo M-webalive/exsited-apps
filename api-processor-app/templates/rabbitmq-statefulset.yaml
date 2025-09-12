@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ .Release.Name }}-rabbitmq
+spec:
+  serviceName: {{ .Release.Name }}-rabbitmq
+  replicas: 1
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-rabbitmq
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-rabbitmq
+    spec:
+      containers:
+        - name: rabbitmq
+          image: {{ .Values.rabbitmq.image }}
+          ports:
+            - containerPort: 5672
+            - containerPort: 15672
+          env:
+            - name: RABBITMQ_DEFAULT_USER
+              value: {{ .Values.rabbitmq.user }}
+            - name: RABBITMQ_DEFAULT_PASS
+              value: {{ .Values.rabbitmq.password }}
+            - name: RABBITMQ_DEFAULT_VHOST
+              value: {{ .Values.rabbitmq.vhost }}
+          volumeMounts:
+            - name: rabbitmq-data
+              mountPath: /var/lib/rabbitmq
+          resources:
+            {{- toYaml .Values.rabbitmq.resources | nindent 12 }}
+  {{- if .Values.rabbitmq.persistence.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: rabbitmq-data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: {{ .Values.rabbitmq.persistence.size }}
+        {{- if .Values.rabbitmq.persistence.storageClass }}
+        storageClassName: {{ .Values.rabbitmq.persistence.storageClass }}
+        {{- end }}
+  {{- else }}
+  template:
+    spec:
+      volumes:
+        - name: rabbitmq-data
+          emptyDir: {}
+  {{- end }}

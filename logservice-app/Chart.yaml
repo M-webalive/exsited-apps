@@ -1,0 +1,6 @@
+apiVersion: v2
+name: log-service
+description: exsited/exsited-app-fast-api-log-service + MongoDB
+type: application
+version: "0.1.0"
+appVersion: "250904001"

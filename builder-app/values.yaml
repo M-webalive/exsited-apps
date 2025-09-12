@@ -1,0 +1,38 @@
+image:
+  repository: exsited/exsited-app-builder
+  tag: "250909002"
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: exsited-dockerhub
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30082
+
+
+ingress:
+  enabled: false
+
+app:
+  grailsEnv: development
+
+mariadb:
+  enabled: true
+  image: "mariadb:10.6"
+  rootPassword: "rootpass"
+  database: "exsited_app_builder"
+  user: "builder_user"
+  password: "builder_pass"
+  storage:
+    size: 5Gi
+    className: ""
+
+resources:
+  requests:
+    memory: "512Mi"
+    cpu: "250m"
+  limits:
+    memory: "1Gi"
+    cpu: "1"
+

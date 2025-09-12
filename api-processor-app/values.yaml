@@ -1,0 +1,89 @@
+replicaCount: 1
+
+image:
+  repository: exsited/exsited-app-api-processor
+  tag: "250904001"
+  pullPolicy: IfNotPresent
+  imagePullSecrets:
+    - name: exsited-dockerhub
+
+service:
+  type: NodePort
+  port: 8080
+  nodePort: 30086
+
+app:
+  timezone: Australia/Melbourne
+  grailsEnv: development
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+
+mariadb:
+  image: mariadb:10.6
+  database: exsited_app_api_processor
+  rootAllowEmptyPassword: true
+  rootPassword: ""  # ignored if allowEmptyPassword=true
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: ""   # set if you need a non-default class
+
+rabbitmq:
+  image: rabbitmq:3-management
+  user: api_handler
+  password: akabaka
+  vhost: api_handler
+  resources:
+    requests:
+      cpu: "100m"
+      memory: "256Mi"
+    limits:
+      cpu: "500m"
+      memory: "512Mi"
+  persistence:
+    enabled: true
+    size: 2Gi
+    storageClass: ""
+
+rabbitConfig:
+  DEFAULT_WAITING_TIME_IN_SECOND: "60"
+  DEFAULT_CONDITION_PULL_INTERVAL_IN_MILLISECONDS: "100"
+  RABBIT_CONNECTION_HOST: ""   # leave blank to use k8s service name
+  API_HANDLER_CONNECTION_USERNAME: "api_handler"
+  RABBIT_CONNECTION_PASSWORD: "akabaka"
+  API_HANDLER_CONNECTION_VIRTUAL_HOST: "api_handler"
+  API_HANDLER_CONNECTION_CONNECTION_NAME: "API_HANDLER_EXTERNAL_APP"
+  API_HANDLER_OUTGOING_REQUEST: "API_HANDLER_OUTGOING_REQUEST"
+  API_HANDLER_OUTGOING_RABBIT_EXCHANGE: "API_HANDLER_OUTGOING_RABBIT_EXCHANGE"
+
+  REQUEST_NODE_ALL: "_REQ_NODE_1,_REQ_NODE_2"
+  REQUEST_NODE_ALL_HOST: "http://127.0.0.1:3131"
+  REQUEST_NODE_ALL_RPC: "http:///127.0.0.1:8871"
+  REQUEST_NODE_CURRENT: "_REQ_NODE_1"
+
+  RESPONSE_NODE_ALL: ""
+  RESPONSE_NODE_ALL_HOST: ""
+  RESPONSE_NODE_ALL_RPC: ""
+  RESPONSE_NODE_CURRENT: ""
+
+  TEST_DATA_MODE: "false"
+  PRIMARY_NODE: "_REQ_NODE_1"
+
+rabbitmqService:
+  exposeManagementAsNodePort: true
+  managementNodePort: 31672
+  exposeAmqpAsNodePort: false
+  amqpNodePort: 30672
+

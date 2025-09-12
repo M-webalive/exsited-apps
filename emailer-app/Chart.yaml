@@ -1,0 +1,6 @@
+apiVersion: v2
+name: emailer-app
+description: Exsited Emailer service (Grails/Java) + MariaDB
+type: application
+version: 0.1.0
+appVersion: "1.0"

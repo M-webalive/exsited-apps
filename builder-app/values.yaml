@@ -1,6 +1,6 @@
 image:
   repository: exsited/exsited-app-builder
-  tag: "250909002"
+  tag: "250917001"
   pullPolicy: IfNotPresent
   imagePullSecrets:
     - name: exsited-dockerhub
